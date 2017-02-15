@@ -85,10 +85,80 @@ ISO_DEF s_isodef[65] = {
 
  
 };
+ISO_DEF s_new_isodef[65] = {
 
-#define MY_BITGET(p,n) ((p)[(n-1)/8]&(0x80>>((n-1)%8)))       //取bit�?
-#define MY_BITSET(p,n) ((p)[(n-1)/8]|=(0x80>>((n-1)%8)))      //设bit�?
-#define MY_BITCLR(p,n) ((p)[(n-1)/8]&=(~(0x80>>((n-1)%8))))   //清bit�?
+
+    /*000*/ {TYP_ASC, 0, 4}, // "Message Type Indicator"
+    /*001*/ {TYP_BIT, 0, 128}, // "Bitmap"
+    /*002*/ {TYP_ASC, 2, 19}, // "Primary Account number"
+    /*003*/ {TYP_ASC, 0, 6}, // "Processing Code"
+    /*004*/ {TYP_ASC, 0, 12}, // "Amount, Transaction"
+    /*005*/ {TYP_ASC, 0, 12}, // "Amount, Reconciliation"
+    /*006*/ {TYP_ASC, 0, 12}, // "Amount, Cardholder billing"
+    /*007*/ {TYP_ASC, 0, 10}, // "Date and time, transmission"
+    /*008*/ {TYP_ASC, 0, 8}, // "Amount, Cardholder billing fee"
+    /*009*/ {TYP_ASC, 0, 8}, // "Conversion rate, Reconciliation"
+    /*010*/ {TYP_ASC, 0, 8}, // "Conversion rate, Cardholder billing"
+    /*011*/ {TYP_ASC, 0, 6}, // "Systems trace audit number"
+    /*012*/ {TYP_ASC, 0, 6}, // "Date and time, Local transaction"
+    /*013*/ {TYP_ASC, 0, 4}, // "Date, Effective"
+    /*014*/ {TYP_ASC, 0, 4}, // "Date, Expiration"
+    /*015*/ {TYP_ASC, 0, 4}, // "Date, Settlement"
+    /*016*/ {TYP_ASC, 0, 4}, // "Date, Conversion"
+    /*017*/ {TYP_ASC, 0, 4}, // "Date, Capture"
+    /*018*/ {TYP_ASC, 0, 4}, // "Merchant type"
+    /*019*/ {TYP_ASC, 0, 3}, // "Country code, Acquiring institution"
+    /*020*/ {TYP_ASC, 0, 3}, // "Country code, Primary account number"
+    /*021*/ {TYP_ASC, 0, 3}, // "Country code, Forwarding institution"
+    /*022*/ {TYP_ASC, 0, 3}, // "Point of service data code"
+    /*023*/ {TYP_ASC, 0, 3}, // "Card sequence number"
+    /*024*/ {TYP_ASC, 0, 3}, // "Function code"
+    /*025*/ {TYP_ASC, 0, 2}, // "Message reason code"
+    /*026*/ {TYP_ASC, 0, 2}, // "Card acceptor business code"
+    /*027*/ {TYP_ASC, 0, 16}, // "Approval code length"
+    /*028*/ {TYP_ASC, 0, 8}, // "Date, Reconciliation"
+    /*029*/ {TYP_ASC, 0, 3}, // "Reconciliation indicator"
+    /*030*/ {TYP_ASC, 0, 24}, // "Amounts, original"
+    /*031*/ {TYP_ASC, 2, 99}, // "Acquirer reference data"
+    /*032*/ {TYP_ASC, 2, 11}, // "Acquirer institution identification code"
+    /*033*/ {TYP_ASC, 2, 11}, // "Forwarding institution identification code"
+    /*034*/ {TYP_ASC, 2, 28}, // "Primary account number, extended"
+    /*035*/ {TYP_ASC, 2, 37}, // "Track 2 data"
+    /*036*/ {TYP_ASC, 3, 104}, // "Track 3 data"
+    /*037*/ {TYP_ASC, 0, 12}, // "Retrieval reference number"
+    /*038*/ {TYP_ASC, 0, 6}, // "Approval code"
+    /*039*/ {TYP_ASC, 0, 2}, // "Action code"
+    /*040*/ {TYP_ASC, 0, 3}, // "Service code"
+    /*041*/ {TYP_ASC, 0, 8}, // "Card acceptor terminal identification"
+    /*042*/ {TYP_ASC, 0, 15}, // "Card acceptor identification code"
+    /*043*/ {TYP_ASC, 0, 40}, // "Card acceptor name/location"
+    /*044*/ {TYP_ASC, 2, 25}, // "Additional response data"
+    /*045*/ {TYP_ASC, 2, 79}, // "Track 1 data"
+    /*046*/ {TYP_ASC, 0, 14}, // "Amounts, Fees"
+    /*047*/ {TYP_ASC, 0, 18}, // "Additional data - national"
+    /*048*/ {TYP_ASC, 3, 512}, // "Additional data - private"TYP_ASC
+    /*049*/ {TYP_ASC, 0, 3}, // "Currency code, Transaction"
+    /*050*/ {TYP_ASC, 0, 3}, // "Currency code, Reconciliation"
+    /*051*/ {TYP_ASC, 0, 3}, // "Currency code, Cardholder billing"
+    /*052*/ {TYP_ASC, 0, 8}, // "Personal identification number, PIN) data"
+    /*053*/ {TYP_ASC, 0, 16}, // "Security related control information"
+    /*054*/ {TYP_ASC, 3, 40}, // "Amounts, additional"
+    /*055*/ {TYP_ASC, 3, 255}, // "IC card system related data"
+    /*056*/ {TYP_ASC, 0, 6}, // "Original data elements"
+    /*057*/ {TYP_ASC, 3, 900}, // "Authorization life cycle code"
+    /*058*/ {TYP_ASC, 3, 100}, // "Authorizing agent institution Id Code"
+    /*059*/ {TYP_ASC, 3, 600}, // "Transport data"
+    /*060*/ {TYP_ASC, 3, 100}, // "Reserved for national use"
+    /*061*/ {TYP_ASC, 3, 200}, // "Reserved for national use"
+    /*062*/ {TYP_ASC, 3, 200}, // "Reserved for private use"
+    /*063*/ {TYP_ASC, 3, 200}, // "Reserved for private use"
+    /*064*/ {TYP_ASC, 0, 8} // "Message authentication code field"
+
+ 
+};
+#define MY_BITGET(p,n) ((p)[(n-1)/8]&(0x80>>((n-1)%8)))       //å–bitä½?
+#define MY_BITSET(p,n) ((p)[(n-1)/8]|=(0x80>>((n-1)%8)))      //è®¾bitä½?
+#define MY_BITCLR(p,n) ((p)[(n-1)/8]&=(~(0x80>>((n-1)%8))))   //æ¸…bitä½?
 unsigned char GBuff[MAX_PACKET_LEN];
 uchar MsgType[2];
 uchar GBitMap[8];
@@ -238,14 +308,14 @@ int   GetField(int FieldNum,uchar *Buff,int *DataLen,int *typ)
 		return 0;
 	}
 	if(!MY_BITGET(GBitMap,FieldNum))
-		return -3;//无此�?
+		return -3;//æ— æ­¤åŸ?
 	len=GetFieldLen(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff+offset);
 	if(len<0)
 	{
 		return -1;
 	}
 	if(len>*DataLen)
-		return -4;//用户区溢�?
+		return -4;//ç”¨æˆ·åŒºæº¢å‡?
 	memcpy(Buff,GBuff+offset+HeadLen,len);
 	*DataLen=len;
 	*typ=s_isodef[FieldNum].typ;
@@ -264,7 +334,7 @@ int  SetField(int FieldNum,uchar *Buff,int DataLen)
 		memcpy(GBuff,Buff,2);
 		return 0;
 	}
-	if(FieldNum==1)//不允许直接修改bitmap
+	if(FieldNum==1)//ä¸å…è®¸ç›´æŽ¥ä¿®æ”¹bitmap
 		return -1;
 
 	BuffLen = DataLen;
@@ -275,10 +345,10 @@ int  SetField(int FieldNum,uchar *Buff,int DataLen)
 	
 		
 	
-	if(DataLen>s_isodef[FieldNum].len)//输入长度大于规定长度
+	if(DataLen>s_isodef[FieldNum].len)//è¾“å…¥é•¿åº¦å¤§äºŽè§„å®šé•¿åº¦
 	{
 		//Printf("Data Len ERR FieldNum=%i DataLen=%i MustLen=%i\n",FieldNum,DataLen,s_isodef[FieldNum].len);
-		return -5;//数据长度错误
+		return -5;//æ•°æ®é•¿åº¦é”™è¯¯
 	}
 	memset(TmpField,0x00,sizeof(TmpField));
 	if(s_isodef[FieldNum].fmt==0)
@@ -294,7 +364,7 @@ int  SetField(int FieldNum,uchar *Buff,int DataLen)
 		else
 			BuffLen=s_isodef[FieldNum].len;
 		/*if(len!=s_isodef[FieldNum].len)
-			return -5;//数据长度错误*/
+			return -5;//æ•°æ®é•¿åº¦é”™è¯¯*/
 	}
 	else if(s_isodef[FieldNum].fmt==2)
 	{
@@ -339,7 +409,7 @@ int  SetField(int FieldNum,uchar *Buff,int DataLen)
 			return -2;
 		}
 	}
-	if(MY_BITGET(GBitMap,FieldNum))//删除原来的那个域
+	if(MY_BITGET(GBitMap,FieldNum))//åˆ é™¤åŽŸæ¥çš„é‚£ä¸ªåŸŸ
 	{
 		len2=GetFieldLen(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff+offset);
 		GPacketLen-=(len2+HeadLen);
@@ -402,7 +472,7 @@ int  DelField(int FieldNum)
 			return -2;
 		}
 	}
-	if(MY_BITGET(GBitMap,FieldNum))//删除原来的那个域
+	if(MY_BITGET(GBitMap,FieldNum))//åˆ é™¤åŽŸæ¥çš„é‚£ä¸ªåŸŸ
 	{
 		len2=GetFieldLen(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff+offset);
 		GPacketLen-=(len2+HeadLen);
@@ -558,8 +628,8 @@ int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuf
 	
 	if(memcmp(field[0],"\x08\x00",2)==0 && memcmp(field[60],"\x00",1)==0 && memcmp(field[60]+4,"\x00\x30",2)==0)
 	{
-		//ǩ��
-		SetPacket((uchar *)"\x08\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1��2��
+		//Ç©µ½
+		SetPacket((uchar *)"\x08\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
 		SetField(11,field[11],6);
 		SetField(12,field[12],6);
 		SetField(13,field[13],4);
@@ -573,8 +643,8 @@ int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuf
 	}
 	else if(memcmp(field[0],"\x02\x00",2)==0 && memcmp(field[3],"\x31",1)==0)
 	{
-		//���
-		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1��2��
+		//Óà¶î
+		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
 		SetField(3,field[3],6);
 
 		SetField(11,field[11],6);
@@ -592,8 +662,8 @@ int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuf
 	}
 	else if(memcmp(field[0],"\x02\x00",2)==0 && memcmp(field[3],"\x00",1)==0 && memcmp(field[25],"\x00",1)==0)
 	{
-		//����
-		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1��2��
+		//Ïû·Ñ
+		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
 		if(fieldlen[2]==8)
 			SetField(2,field[2],16);
 		else if(fieldlen[2]==9)
@@ -623,8 +693,8 @@ int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuf
 	}
 	else if(memcmp(field[0],"\x02\x00",2)==0 && memcmp(field[3],"\x20",1)==0 && memcmp(field[25],"\x00",1)==0)
 	{
-		//���ѳ���
-		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1��2��
+		//Ïû·Ñ³·Ïû
+		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
 		if(fieldlen[2]==8)
 			SetField(2,field[2],16);
 		else if(fieldlen[2]==9)
@@ -655,8 +725,8 @@ int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuf
 	}
 	else if(memcmp(field[0],"\x02\x20",2)==0 && memcmp(field[3],"\x20",1)==0)
 	{
-		//���ѳ���
-		SetPacket((uchar *)"\x02\x30\x00\x00\x00\x00\x00\x00\x00\x00",10);//1��2��
+		//Ïû·Ñ³·Ïû
+		SetPacket((uchar *)"\x02\x30\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
 		if(fieldlen[2]==8)
 			SetField(2,field[2],16);
 		else if(fieldlen[2]==9)
@@ -844,13 +914,18 @@ void DelFld62(uchar *hexBuff, int BuffLen, int *SendLen)
 
 }
 // add at convert 64 bitmap message to 128 bitmap message
-int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen )
+int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen int* ConvertLen )
 {
 	int Ret,i,j;
 	int FieldLen,Fieldtype;
 	uchar tmpBuff[2048];
 	char str[2048];
 	char sstr[10];
+	int  MsgPacketHeaderLen = 46;
+	uchar ascii_buf[2048];
+	uchar sField63[1024];
+	int  nField63Len; 
+	int offset;
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg); 
 	
 	memset(str,0,2048);
@@ -860,7 +935,7 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen )
 		strcpy(str+strlen(str),sstr);
 	}
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
-	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	Ret=SetPacket(&hexBuff[MsgPacketHeaderLen],BuffLen-MsgPacketHeaderLen);
 	if(Ret!=0)
 	{
 		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",msg);
@@ -869,18 +944,18 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen )
 	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
 
 	memset(str,0,2048);
-	for(i=0; i<MagPacketHeaderLen; i++)
+	for(i=0; i<MsgPacketHeaderLen; i++)
 	{
 		sprintf(sstr,"%0.2X ",hexBuff[i]);
 		strcpy(str+strlen(str),sstr);
 	}
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "Head   %s",str);
 	memset(str,0,2048);
-
+    offset=0;
 	for(i=0; i<=64; i++)
 	{
 		FieldLen =2048;
-		if(GetField(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
+		if(GetField_Length(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
 		{
 			if(FieldLen==0)
 				sprintf(str,"F%0.2d     ",i);
@@ -889,14 +964,166 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen )
 				sprintf(str,"F%0.2d     ",i);
 				for(j=0; j<FieldLen; j++)
 					sprintf(str+strlen(str),"%0.2X ",tmpBuff[j]);
+
+				if( s_isodef[i].fmt == 0)
+				{
+					HeadLen=0;
+					DataLen=s_isodef[i].len;
+				}
+				if ( s_isodef[i].fmt == 2)
+				{
+					HeadLen=1;
+					DataLen=bcd2int(tmpBuff,1);
+
+				}
+				if (s_isodef[i].fmt == 3)
+				{
+					HeadLen=2;
+					DataLen=bcd2int(tmpBuff, 2);
+				}
+
+                if( i == 0 )
+                {
+                	bcd_to_asc(ascii_buf+offset, tmpBuff, 4, 0);
+                	HeadLen = 0;
+                }
+                else if( i == 1)
+                {
+                	memcpy(ascii_buf+offset, tmpBuff, 8);                	
+                	memcpy(ascii_buf+offset+8, "\x00\x00\x00\x00\x00\x00\x00\x00",8);
+                	offset=offset+8;
+                	HeadLen=0;
+                }
+                else if(s_isodef[i].fmt == 0 && Fieldtype == TYP_BCD && s_new_isodef[i].typ == TYP_ASC)
+                {
+                	// 55 field lenght=145  0x01 0x45  convert 0x31 0x34 0x35  type=1
+                	HeadLen=0; 
+                	bcd_to_asc(ascii_buf+offset, tmpBuff, DataLen, 0);
+                	//bcd_to_asc(ascii_buf, tmpBuff, 3, 1);
+                	//memcpy(ascii_buf+3, tmpBuff+2, DataLen);
+                }
+                else if(s_isodef[i].fmt == 2 && Fieldtype == TYP_BCD && s_new_isodef[i].typ == TYP_ASC)
+                {
+                   // example card length 0x19  convert  0x30 0x39   HeadLen 1 -> 2 
+                   HeadLen=2;
+				   bcd_to_asc(ascii_buf+offset, tmpBuff, HeadLen+DataLen, 0);
+                }
+                else if(s_isodef[i].fmt == 2 && Fieldtype == TYP_BCD && s_new_isodef[i].typ == TYP_ASC)
+                {
+                	// 55 field lenght=145  0x01 0x45  convert 0x31 0x34 0x35  type=1 drop off first 0x30 
+                	// 2 bytes ---> 3 bytes  
+                	HeadLen=3;
+                	bcd_to_asc(ascii_buf+offset, tmpBuff, HeadLen+DataLen, 1);
+                }
+                else if(s_isodef[i].fmt == 0 && Fieldtype == TYP_ASC && s_new_isodef[i].typ == TYP_ASC)
+                {
+                    HeadLen=0;
+                    memcpy(ascii_buf+offset, tmpBuff, DataLen);
+                }
+                else if(s_isodef[i].fmt == 2 && Fieldtype == TYP_ASC && s_new_isodef[i].typ == TYP_ASC)
+                {
+                    HeadLen=2;
+                    bcd_to_asc(ascii_buf+offset, tmpBuff, HeadLen,0);
+                    memcpy(ascii_buf+offset+HeadLen, tmpBuff+1, DataLen);
+
+                }
+                else if(s_isodef[i].fmt == 3 && Fieldtype == TYP_ASC && s_new_isodef[i].typ == TYP_ASC)
+                {
+                	HeadLen=3;
+                	bcd_to_asc(ascii_buf+offset, tmpBuff, HeadLen, 1);
+                	memcpy(ascii_buf+offset+HeadLen, tmpBuff+2, DataLen);
+                }	
+                else
+                {
+                	memcpy(ascii_buf+offset, tmpBuff, DataLen+HeadLen);
+                }
+                //memcpy(ascii_buf+offset, tmpBuff, DataLen+HeadLen*2);
+                if( i == 63)
+                {
+                	memcpy(sField63, ascii_buf+offset, HeadLen+DataLen);
+                    nField63Len=DataLen;
+                }
+
+                offset=HeadLen+DataLen;  
+
 			}
 			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
+			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__, __LINE__, "%s", ascii_buf)
 
 		}
 	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "sField63   %s",sField63);
+	// default 128 message length=0x30 0x30 0x30 0x30
+	memcpy(sendmsg,"0000", 4);
+	memcpy(sendmsg+4, hexBuff+2, MsgPacketHeaderLen);
+	memcpy(sendmsg+4+MsgPacketHeaderLen, ascii_buf,offset);
+	ConvertLen = 4+MsgPacketHeaderLen+offset;
+	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, sendmsg, 4+MsgPacketHeaderLen+offset);
+    // next trouble is add data between 64 to 128  field to message 
+    // data stores in field 63
+    
+
+    ConvertLen=MsgPacketHeaderLen+offset;
+    return 0;
 }
 int Convert128To64(char sNetMsgBuf[], int* nMsgLen)
 {
 
+	return 0;
+}
+int   GetField_Length(int FieldNum,uchar *Buff,int *DataLen,int *typ)
+{
+	int i,len,HeadLen;
+	int offset;
+	if (FieldNum>64)
+		return -1;
+	offset=0;
+	for (i=0;i<FieldNum&&i<64;i++)
+	{
+		if(i==0)
+		{
+			offset+=2;
+			continue;
+		}
+		if(i==1)
+		{
+			offset+=8;
+			continue;
+		}
+		if (!MY_BITGET(GBitMap,i))
+			continue;
+		len=GetFieldLen(s_isodef[i],&HeadLen,(uchar*)GBuff+offset);
+		if(len<=0)
+		{
+			return -1;
+		}
+		offset+=HeadLen+len;
+		if(offset>MAX_PACKET_LEN)
+			return -2;
+	}
+	if(FieldNum==0)//MsgType
+	{
+		memcpy(Buff,GBuff,2);
+		*DataLen=2;
+		return 0;
+	}
+	if(FieldNum==1)//BitMap
+	{
+		memcpy(Buff,GBuff+2,8);
+		*DataLen=8;
+		return 0;
+	}
+	if(!MY_BITGET(GBitMap,FieldNum))
+		return -3;//无此域
+	len=GetFieldLen(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff+offset);
+	if(len<=0)
+	{
+		return -1;
+	}
+	if(len>*DataLen)
+		return -4;//用户区溢出
+	memcpy(Buff,GBuff+offset,len);
+	*DataLen=len;
+	*typ=s_isodef[FieldNum].typ;
 	return 0;
 }

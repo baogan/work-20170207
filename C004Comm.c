@@ -627,22 +627,26 @@ int HandleRequestMessage(char *psMsgBuf, int nMsgLen)
         //60 00 10 00 00 03 03
        // memcpy(sHandFor1718,"\x60\x00\x10\x00\x00\01\x00\x00\x31\x10\x03\x00",12);
             memcpy(sHandFor1718, "\x2e\x01", 2);
-            //memcpy(sHandFor1718+2, , 4);
-            memcpy(sHandFor1718+6, "\x39\x39\x39\x39\x30\x30\x30\x30\x20\x20\x20", 11);
-            memcpy(sHandFor1718+17, "\x39\x39\x39\x39\x30\x30\x30\x30\x20\x20\x20", 11);
+            memcpy(sHandFor1718+2, "\x30\x30\x30\x30", 4);
+            // 36 30 31 39 31 32 34 31 20 20 20
+            memcpy(sHandFor1718+6, "\x36\x30\x31\x39\x31\x32\x34\x31\x20\x20\x20", 11);
+            memcpy(sHandFor1718+17, "\x36\x30\x31\x39\x31\x32\x34\x31\x20\x20\x20", 11);
             memcpy(sHandFor1718+28, "\x30\x30\x30",3);
             memcpy(sHandFor1718+31, "\x30", 1);
             memcpy(sHandFor1718+32, "\x30\x30\x30\x30\x30\x30\x30\x30", 8);
             memcpy(sHandFor1718+40, "\x30", 1 );
             memcpy(sHandFor1718+41, "\x30\x30\x30\x30\x30", 5);
-            sMsgSndBuf[0] = (nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+4)/256;
-            sMsgSndBuf[1] = (nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+4)%256;
+            sMsgSndBuf[0] = (nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN))/256;
+            sMsgSndBuf[1] = (nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN))%256;
             memcpy(sMsgSndBuf+2,sHandFor1718,46);
             //memcpy(sHandFor1718old,psMsgBuf+SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN,46);
             memcpy(sMsgSndBuf+2+46,psMsgBuf+SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN+11, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN+11));
+
             HtDebugString(gsLogFile, HT_LOG_MODE_DEBUG, __FILE__, __LINE__, sMsgSndBuf,nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2);
             Print8583Packet("1718sendpacket",sMsgSndBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2);
-            ConvertToAscii(sMsgSndBuf+2+46,sMsgConvBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2,&ConvertLen);
+
+            Convert64To128(sMsgSndBuf+2+46,sMsgConvBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2,&ConvertLen);
+
             nReturnCode = WriteSocket(socket_id, sMsgSndBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+4+2);
             HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "WriteSocket [%d]", nReturnCode);
             if (nReturnCode <= 0)
