@@ -91,10 +91,10 @@ int main(int argc, char *argv[])
 
     memset ((char *)gatSrvMsq, 0, sizeof (gatSrvMsq));
     nRet = MsqInit (gsSrvId, gatSrvMsq);
-      for( i=0; i<=20; i++)
-      {
+    for( i=0; i<=20; i++)
+    {
         HtLog (gsLogFile, HT_LOG_MODE_NORMAL, __FILE__,__LINE__, "srvid=%s, gatSrvMsq[%d] sSrvId=%s nMsqId=%d lMsqType=%08d ",                         gsSrvId,i,gatSrvMsq[i].sSrvId,gatSrvMsq[i].nMsqId,gatSrvMsq[i].lMsqType);
-      }
+    }
     if (nRet)
     {
         HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "MsqInit error,%d", nRet);
@@ -286,15 +286,15 @@ void   Rdmsg_to()
 
 int Create_socket( unsigned Port)
 {
-    int     socket_id;
-     int       RetryTimeSap = 2,nRetryFlag = 0;
+      int     socket_id;
+      int       RetryTimeSap = 2,nRetryFlag = 0;
 
-       memset(&local_addr,0, sizeof(local_addr));
-       local_addr.sin_port = htons(Port);
-       local_addr.sin_family = AF_INET;
-    local_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
+      memset(&local_addr,0, sizeof(local_addr));
+      local_addr.sin_port = htons(Port);
+      local_addr.sin_family = AF_INET;
+      local_addr.sin_addr.s_addr = inet_addr("0.0.0.0");
 
-     while ((socket_id = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+       while ((socket_id = socket(AF_INET, SOCK_STREAM, 0)) < 0)
        {
         HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__,
                  "socket error time");
@@ -307,7 +307,7 @@ int Create_socket( unsigned Port)
            sleep(RetryTimeSap);
        }
 
-    Setsokopt(socket_id);
+       Setsokopt(socket_id);
 
        RetryTimeSap = 2;
        nRetryFlag = 0;
@@ -324,31 +324,34 @@ int Create_socket( unsigned Port)
            sleep(RetryTimeSap);
        }
 
-    listen(socket_id, 1024);
+        listen(socket_id, 1024);
 
-       return(socket_id);
+        return(socket_id);
 }
 
-
+/******
+****  fulinmen channel length of message 4 bytes ascii 0x30 0x31 0x32 0x33
+*****  123 bytes
+*****/
 int ReadSocket(int socket_id_new,char *buf ,int len)
 {
     int num, nLen, I=0,iTimeout=60;
     unsigned char tmp_buf[5];
     char tmp_Str[2048];
     unsigned char logbuf[2048];
-	char const_srv_id[30];
+    char const_srv_id[30];
 
     memset(tmp_Str, 0, sizeof(tmp_Str));
     memset(tmp_buf, 0, sizeof(tmp_buf));
     memset(logbuf, 0, sizeof(logbuf));
-	memset(const_srv_id, 0, sizeof(const_srv_id));
+    memset(const_srv_id, 0, sizeof(const_srv_id));
 
-        if (getenv("COMM_P_TIME_OUT"))
-        iTimeout=atoi (getenv("COMM_P_TIME_OUT"));
+    if (getenv("COMM_P_TIME_OUT"))
+    iTimeout=atoi (getenv("COMM_P_TIME_OUT"));
     alarm(iTimeout);
-        memset(tmp_buf,0,sizeof(tmp_buf));
-    num = read(socket_id_new, tmp_buf, 2);
-    memcpy(logbuf, tmp_buf, 2);
+    memset(tmp_buf,0,sizeof(tmp_buf));
+    num = read(socket_id_new, tmp_buf, 4);
+    memcpy(logbuf, tmp_buf, 4);
     HtDebugString (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, logbuf, 2);
 
     HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "len = %d", num);
@@ -361,8 +364,10 @@ int ReadSocket(int socket_id_new,char *buf ,int len)
 
     if ( num == 0 ) return (E_SBREAK);
 
-    HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "tmp_buf0[%d], tmp_buf1[%d]", tmp_buf[0], tmp_buf[1]);
-    nLen = tmp_buf[0]*256 + tmp_buf[1];
+    //HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "tmp_buf0[%d], tmp_buf1[%d]", tmp_buf[0], tmp_buf[1]);
+    HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "tmp_buf =%s", tmp_buf);
+    //nLen = tmp_buf[0]*256 + tmp_buf[1];
+    nLen = atoi(tmp_buf);
     HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "nLen = %d", nLen);
     if ( nLen == 0 ) return (E_SBREAK);
 
@@ -371,7 +376,7 @@ int ReadSocket(int socket_id_new,char *buf ,int len)
           if(errno==EINTR) continue;
         HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "read socket error");
         return(E_SBREAK);
-        }
+    }
 
     if (nLen >= 2048 )
     {
@@ -379,11 +384,12 @@ int ReadSocket(int socket_id_new,char *buf ,int len)
         return -1;
     }
     memcpy(buf, tmp_Str, nLen);
-    memcpy(logbuf+2, tmp_Str, nLen);
-    HtDebugString (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, logbuf, 2+nLen);
-	memcpy(const_srv_id,gsSrvId,4);
-	strcat(const_srv_id,"Recvpacket");
-	Print8583Packet(const_srv_id,logbuf, 2+nLen);
+    memcpy(logbuf+4, tmp_Str, nLen);
+    HtDebugString (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, logbuf, 4+nLen);
+    memcpy(const_srv_id,gsSrvId,4);
+    memcpy(const_srv_id, "1817", 4);
+    strcat(const_srv_id,"Recvpacket");
+    Print8583Packet(const_srv_id,logbuf, 4+nLen);
 
     return num ;
 }
@@ -396,11 +402,11 @@ int WriteSocket(int socket_id_new,char *buf, int len)
     char sTmp[4+1];
     char const_srv_id[30];
 
-      if (len == 0) return(0);
+    if (len == 0) return(0);
 
-       memset(saSendBuf,0,sizeof(saSendBuf));
+    memset(saSendBuf,0,sizeof(saSendBuf));
     memset(sTmp,0,sizeof(sTmp));
-	memset(const_srv_id, 0, sizeof(const_srv_id));
+    memset(const_srv_id, 0, sizeof(const_srv_id));
 
     sprintf(sTmp,"%04x", len);
     Str2Hex(sTmp,saSendBuf,4);
@@ -409,10 +415,10 @@ int WriteSocket(int socket_id_new,char *buf, int len)
     len = len + 2;
     HtDebugString (gsLogFile, HT_LOG_MODE_DEBUG, __FILE__,    __LINE__, saSendBuf, len);
     memcpy(const_srv_id,gsSrvId,4);
-	strcat(const_srv_id,"Sendpacket");
+    strcat(const_srv_id,"Sendpacket");
     Print8583Packet(const_srv_id,saSendBuf, len);
 
-HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__,"socket = %d, pid = %d", socket_id_new, getpid());
+    HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__,"socket = %d, pid = %d", socket_id_new, getpid());
     iWritelen=0;
     for(;;)
     {

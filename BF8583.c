@@ -163,6 +163,10 @@ unsigned char GBuff[MAX_PACKET_LEN];
 uchar MsgType[2];
 uchar GBitMap[8];
 int GPacketLen;
+unsigned char GBuff128[MAX_PACKET_LEN];
+uchar MsgType128[4];
+uchar GBitMap128[16];
+int GPacketLen128;
 int  asc2hex(uchar *asc, uchar *hex, int pair_len)
 {
     uchar src1,src2;
@@ -232,12 +236,32 @@ int   SetPacket(uchar *Buff,int Len)
 	GPacketLen=Len;
 	return 0;
 }
+int   SetPacket128(uchar *Buff,int Len)
+{
+	if(Len>MAX_PACKET_LEN)
+		return -1;
+	if(Len<10)
+		return -1;
+
+	memcpy(GBuff128,Buff,Len);	
+	memcpy(MsgType128,GBuff128,2);
+	memcpy(GBitMap128,GBuff+2,8);
+	GPacketLen128=Len;
+	return 0;
+}
 int  GetPacket(uchar *Buff,int BuffLen)
 {
 	if(GPacketLen >BuffLen)
 		return -1;
 	memcpy(Buff,GBuff,GPacketLen);
 	return GPacketLen;
+}
+int  GetPacket128(uchar *Buff,int BuffLen)
+{
+	if(GPacketLen >BuffLen)
+		return -1;
+	memcpy(Buff,GBuff128,GPacketLen128);
+	return GPacketLen128;
 }
 
 
@@ -258,6 +282,32 @@ int GetFieldLen(ISO_DEF isodef,int *HeadLen,uchar *Data)
 	{
 		*HeadLen=2;
 		DataLen=bcd2int(Data,2);
+	}
+	if(isodef.typ==TYP_BCD)
+		DataLen=(DataLen+1)/2;
+	else if (!(isodef.typ==TYP_ASC||isodef.typ==TYP_BIN))
+		DataLen=0;
+	return DataLen;
+}
+int GetFieldLen128(ISO_DEF isodef,int *HeadLen,uchar *Data)
+{
+	int DataLen;
+	if(isodef.fmt==0)
+	{
+		*HeadLen=0;
+		DataLen=isodef.len;
+	}
+	if(isodef.fmt==2)
+	{
+		*HeadLen=2;
+		DataLen=(Data[0]-0x30)*10+(Data[1]-0x30);
+		//DataLen=bcd2int(Data,1);
+	}
+	if(isodef.fmt==3)
+	{
+		*HeadLen=3;
+		DataLen=(Data[0]-0x30)*100+(Data[1]-0x30)*10+(Data[2]-0x30);
+		//DataLen=bcd2int(Data,2);
 	}
 	if(isodef.typ==TYP_BCD)
 		DataLen=(DataLen+1)/2;
@@ -310,6 +360,62 @@ int   GetField(int FieldNum,uchar *Buff,int *DataLen,int *typ)
 	if(!MY_BITGET(GBitMap,FieldNum))
 		return -3;//æ— æ­¤åŸ?
 	len=GetFieldLen(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff+offset);
+	if(len<0)
+	{
+		return -1;
+	}
+	if(len>*DataLen)
+		return -4;//ç”¨æˆ·åŒºæº¢å‡?
+	memcpy(Buff,GBuff+offset+HeadLen,len);
+	*DataLen=len;
+	*typ=s_isodef[FieldNum].typ;
+	return 0;
+}
+int   GetField128(int FieldNum,uchar *Buff,int *DataLen,int *typ)
+{
+	int i,len,HeadLen;
+	int offset;
+	if (FieldNum>64)
+		return -1;
+	offset=0;
+	for (i=0;i<FieldNum&&i<128;i++)
+	{
+		if(i==0)
+		{
+			offset+=4;
+			continue;
+		}
+		if(i==1)
+		{
+			offset+=16;
+			continue;
+		}
+		if (!MY_BITGET(GBitMap128,i))
+			continue;
+		len=GetFieldLen128(s_isodef[i],&HeadLen,(uchar*)GBuff128+offset);
+		if(len<0)
+		{
+			return -1;
+		}
+		offset+=HeadLen+len;
+		if(offset>MAX_PACKET_LEN)
+			return -2;
+	}
+	if(FieldNum==0)//MsgType
+	{
+		memcpy(Buff,GBuff128,4);
+		*DataLen=4;
+		return 0;
+	}
+	if(FieldNum==1)//BitMap
+	{
+		memcpy(Buff,GBuff128+4,8);
+		*DataLen=16;
+		return 0;
+	}
+	if(!MY_BITGET(GBitMap128,FieldNum))
+		return -3;//æ— æ­¤åŸ?
+	len=GetFieldLen128(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff128+offset);
 	if(len<0)
 	{
 		return -1;
@@ -926,6 +1032,7 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen int* ConvertLen )
 	uchar sField63[1024];
 	int  nField63Len; 
 	int offset;
+	char* pch;
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg); 
 	
 	memset(str,0,2048);
@@ -1055,19 +1162,101 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen int* ConvertLen )
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "sField63   %s",sField63);
 	// default 128 message length=0x30 0x30 0x30 0x30
 	memcpy(sendmsg,"0000", 4);
-	memcpy(sendmsg+4, hexBuff+2, MsgPacketHeaderLen);
+	memcpy(sendmsg+4, hexBuff, MsgPacketHeaderLen);
 	memcpy(sendmsg+4+MsgPacketHeaderLen, ascii_buf,offset);
 	ConvertLen = 4+MsgPacketHeaderLen+offset;
+	ConvertLen = ConvertLen-8-nField63Len-3;  // del 64 field data and 63 field
+	MY_BITCLR(sendmsg+4+MsgPacketHeaderLen+4,63);  // del bitmap 63 bit 1---> 0
+	MY_BITCLR(sendmsg+4+MsgPacketHeaderLen+4,64); // del bitmap  64 bit 1---> 0
 	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, sendmsg, 4+MsgPacketHeaderLen+offset);
     // next trouble is add data between 64 to 128  field to message 
-    // data stores in field 63
-    
+    // data stores in field 63. tag 7F 90 ---- 90 field   tag 7F 22 ----- 122 field  
+    pch = strstr(sField63, "\x7F\x90");
+    if( pch == NULL )
+    {
+        ;
+    }
+    else
+    {
+	memcpy(sendmsg+ConvertLen, pch+2, 42);
+	ConvertLen=ConvertLen+42;
+	MY_BITSET(sendmsg+4+MsgPacketHeaderLen+4, 90); // add 90 field like add 26 field 
+    }
 
-    ConvertLen=MsgPacketHeaderLen+offset;
+    pch = strstr(sField63, "\x7F\x22");
+    if ( pch == NULL )
+    {
+    	;
+    }
+    else
+    {
+    memcpy(sstr, pch+2, 3);
+    sstr[3]=0x00;
+    FieldLen=atoi(sstr);
+    memcpy(sendmsg+ConvertLen, pch+2, FieldLen+3);
+    ConvertLen=ConvertLen+FieldLen+3;
+    MY_BITSET(sendmsg+4+MsgPacketHeaderLen+4, 122);  // add 122 field like add 58 field   	
+    }
+    // reset bitmap  del 63 64   add 90 122 field
+    memcpy(sendmsg+ConvertLen, "\x00\x00\x00\x00\x00\x00\x00\x00", 8);
+    ConvertLen = ConvertLen + 8;  // add 128 field 
+    MY_BITSet(sendmsg+4+MsgPacketHeaderLen+4,128);
+    sprintf(sstr, "%04d", ConvertLen);
+    memcpy(sendmsg, sstr,4);
+    memcpy(sendmsg+4+2, sstr, 4);
     return 0;
 }
-int Convert128To64(char sNetMsgBuf[], int* nMsgLen)
+int Convert128To64(uchar hexBuff[], int* nMsgLen)
 {
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	int MsgPacketHeaderLen=46;
+	uchar tmpBuff[2048];
+	char str[2048];
+	char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg); 
+	
+	memset(str,0,2048);
+	for(i=0;i<nMsgLen;i++)
+	{
+		sprintf(sstr,"%0.2X",hexBuff[i]);
+		strcpy(str+strlen(str),sstr);
+	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
+	Ret=SetPacket(&hexBuff[MsgPacketHeaderLen],nMsgLen-MsgPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",msg);
+		return; 	
+	}
+	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, nMsgLen);
+
+	memset(str,0,2048);
+	for(i=0; i<MsgPacketHeaderLen; i++)
+	{
+		sprintf(sstr,"%0.2X ",hexBuff[i]);
+		strcpy(str+strlen(str),sstr);
+	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "Head   %s",str);
+	memset(str,0,2048);
+
+	for(i=0; i<=64; i++)
+	{
+		FieldLen =2048;
+		if(GetField(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
+		{
+			if(FieldLen==0)
+				sprintf(str,"F%0.2d     ",i);
+			else
+			{
+				sprintf(str,"F%0.2d     ",i);
+				for(j=0; j<FieldLen; j++)
+					sprintf(str+strlen(str),"%0.2X ",tmpBuff[j]);
+			}
+			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
+
+		}
+	}	
 
 	return 0;
 }

@@ -645,7 +645,7 @@ int HandleRequestMessage(char *psMsgBuf, int nMsgLen)
             HtDebugString(gsLogFile, HT_LOG_MODE_DEBUG, __FILE__, __LINE__, sMsgSndBuf,nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2);
             Print8583Packet("1718sendpacket",sMsgSndBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2);
 
-            Convert64To128(sMsgSndBuf+2+46,sMsgConvBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2,&ConvertLen);
+            Convert64To128(sMsgSndBuf+2,sMsgConvBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+2,&ConvertLen);
 
             nReturnCode = WriteSocket(socket_id, sMsgSndBuf, nMsgLen-(SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN)+4+2);
             HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__, "WriteSocket [%d]", nReturnCode);
