@@ -152,9 +152,72 @@ ISO_DEF s_new_isodef[65] = {
     /*061*/ {TYP_ASC, 3, 200}, // "Reserved for national use"
     /*062*/ {TYP_ASC, 3, 200}, // "Reserved for private use"
     /*063*/ {TYP_ASC, 3, 200}, // "Reserved for private use"
-    /*064*/ {TYP_ASC, 0, 8} // "Message authentication code field"
+    /*064*/ {TYP_ASC, 0, 8}, // "Message authentication code field"
+    /*065*/ {TYP_ASC, 0, 2},
+    /*66*/  {TYP_ASC, 0, 2},
+    /*67*/  {TYP_ASC, 0, 2}
+    /*68*/  {TYP_ASC, 0, 2}
+    /*69*/  {TYP_ASC, 0, 2}
+    /*70*/  {TYP_ASC, 0, 3}   // n3 Network Management Information Code
+    /*71*/  {TYP_ASC, 0, 2}
+    /*72*/  {TYP_ASC, 0, 2}
+    /*73*/  {TYP_ASC, 0, 2}
+    /*74*/  {TYP_ASC, 0, 2}
+    /*75*/  {TYP_ASC, 0, 2}
+    /*76*/  {TYP_ASC, 0, 2}
+    /*77*/  {TYP_ASC, 0, 2}
+    /*78*/  {TYP_ASC, 0, 2}
+    /*79*/  {TYP_ASC, 0, 2}
+    /*80*/  {TYP_ASC, 0, 2}
+    /*81*/  {TYP_ASC, 0, 2}
+    /*82*/  {TYP_ASC, 0, 2}
+    /*83*/  {TYP_ASC, 0, 2}
+    /*84*/  {TYP_ASC, 0, 2}
+    /*85*/  {TYP_ASC, 0, 2}
+    /*86*/  {TYP_ASC, 0, 2}
+    /*87*/  {TYP_ASC, 0, 2}
+    /*88*/  {TYP_ASC, 0, 2}
+    /*89*/  {TYP_ASC, 0, 2}
+    /*90*/  {TYP_ASC, 0, 42}  // n42 Original Data Elements
+    /*91*/  {TYP_ASC, 0, 2}
+    /*92*/  {TYP_ASC, 0, 2}
+    /*93*/  {TYP_ASC, 0, 2}
+    /*94*/  {TYP_ASC, 0, 2}
+    /*95*/  {TYP_ASC, 0, 2}
+    /*96*/  {TYP_ASC, 0, 8}   // 64bit Message Security Code
+    /*97*/  {TYP_ASC, 0, 2}
+    /*98*/  {TYP_ASC, 0, 2}
+    /*99*/  {TYP_ASC, 0, 2}
+    /*100*/ {TYP_ASC, 2, 11}  //  institution identification code
+    /*101*/ {TYP_ASC, 0, 2}
+    /*102*/ {TYP_ASC, 2, 28}  // Account Identification 1
+    /*103*/ {TYP_ASC, 2, 28}  // Account Identification 2
+    /*104*/ {TYP_ASC, 0, 2}
+    /*105*/ {TYP_ASC, 0, 2}
+    /*106*/ {TYP_ASC, 0, 2}
+    /*107*/ {TYP_ASC, 0, 2}
+    /*108*/ {TYP_ASC, 0, 2}
+    /*109*/ {TYP_ASC, 0, 2}
+    /*110*/ {TYP_ASC, 0, 2}
+    /*111*/ {TYP_ASC, 0, 2}
+    /*112*/ {TYP_ASC, 0, 2}
+    /*113*/ {TYP_ASC, 0, 2}
+    /*114*/ {TYP_ASC, 0, 2}
+    /*115*/ {TYP_ASC, 0, 2}
+    /*116*/ {TYP_ASC, 0, 2}
+    /*117*/ {TYP_ASC, 0, 2}
+    /*118*/ {TYP_ASC, 0, 2}
+    /*119*/ {TYP_ASC, 0, 2}
+    /*120*/ {TYP_ASC, 0, 2}
+    /*121*/ {TYP_ASC, 3, 100}  //CUPS Reserved
+    /*122*/ {TYP_ASC, 3, 100}  //Acquiring Institution Reserved  
+    /*123*/ {TYP_ASC, 3, 100}  //Issuer Institution Reserved
+    /*124*/ {TYP_ASC, 0, 2}
+    /*125*/ {TYP_ASC, 0, 2}
+    /*126*/ {TYP_ASC, 0, 2}
+    /*127*/ {TYP_ASC, 0, 2}
+    /*128*/ {TYP_ASC, 0, 8}    // mac 
 
- 
 };
 #define MY_BITGET(p,n) ((p)[(n-1)/8]&(0x80>>((n-1)%8)))       //å–bitä½?
 #define MY_BITSET(p,n) ((p)[(n-1)/8]|=(0x80>>((n-1)%8)))      //è®¾bitä½?
@@ -375,7 +438,7 @@ int   GetField128(int FieldNum,uchar *Buff,int *DataLen,int *typ)
 {
 	int i,len,HeadLen;
 	int offset;
-	if (FieldNum>64)
+	if (FieldNum>128)
 		return -1;
 	offset=0;
 	for (i=0;i<FieldNum&&i<128;i++)
@@ -392,7 +455,7 @@ int   GetField128(int FieldNum,uchar *Buff,int *DataLen,int *typ)
 		}
 		if (!MY_BITGET(GBitMap128,i))
 			continue;
-		len=GetFieldLen128(s_isodef[i],&HeadLen,(uchar*)GBuff128+offset);
+		len=GetFieldLen128(s_new_isodef[i],&HeadLen,(uchar*)GBuff128+offset);
 		if(len<0)
 		{
 			return -1;
@@ -415,16 +478,16 @@ int   GetField128(int FieldNum,uchar *Buff,int *DataLen,int *typ)
 	}
 	if(!MY_BITGET(GBitMap128,FieldNum))
 		return -3;//æ— æ­¤åŸ?
-	len=GetFieldLen128(s_isodef[FieldNum],&HeadLen,(uchar*)GBuff128+offset);
+	len=GetFieldLen128(s_new_isodef[FieldNum],&HeadLen,(uchar*)GBuff128+offset);
 	if(len<0)
 	{
 		return -1;
 	}
 	if(len>*DataLen)
 		return -4;//ç”¨æˆ·åŒºæº¢å‡?
-	memcpy(Buff,GBuff+offset+HeadLen,len);
+	memcpy(Buff,GBuff128+offset+HeadLen,len);
 	*DataLen=len;
-	*typ=s_isodef[FieldNum].typ;
+	*typ=s_new_isodef[FieldNum].typ;
 	return 0;
 }
 int  SetField(int FieldNum,uchar *Buff,int DataLen)
@@ -671,7 +734,57 @@ void Print8583Packet(uchar *msg, uchar *hexBuff, int BuffLen)
 		}
 	}
 }
+void Print8583Packet128(uchar *msg, uchar *hexBuff, int BuffLen)
+{
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	uchar tmpBuff[2048];
+	char str[2048];
+	char sstr[10];
+	int MsgPacketHeaderLen=46;
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg);	
+	memset(str,0,2048);
+	for(i=0;i<BuffLen;i++)
+	{
+		sprintf(sstr,"%0.2X",hexBuff[i]);
+		strcpy(str+strlen(str),sstr);
+	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
+	Ret=SetPacket128(&hexBuff[MsgPacketHeaderLen],BuffLen-MsgPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",msg);
+		return; 	
+	}
+	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
 
+	memset(str,0,2048);
+	for(i=0; i<MsgPacketHeaderLen; i++)
+	{
+		sprintf(sstr,"%0.2X ",hexBuff[i]);
+		strcpy(str+strlen(str),sstr);
+	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "Head   %s",str);
+	memset(str,0,2048);
+
+	for(i=0; i<=128; i++)
+	{
+		FieldLen =2048;
+		if(GetField128(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
+		{
+			if(FieldLen==0)
+				sprintf(str,"F%0.2d     ",i);
+			else
+			{
+				sprintf(str,"F%0.2d     ",i);
+				for(j=0; j<FieldLen; j++)
+					sprintf(str+strlen(str),"%0.2X ",tmpBuff[j]);
+			}
+			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
+
+		}
+	}
+}
 int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuff,int *SendBuffLen)
 {
 	int Ret,i,j;
@@ -1033,6 +1146,7 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen int* ConvertLen )
 	int  nField63Len; 
 	int offset;
 	char* pch;
+	int HeadLen,DataLen;
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg); 
 	
 	memset(str,0,2048);
@@ -1212,8 +1326,13 @@ int Convert128To64(uchar hexBuff[], int* nMsgLen)
 	int FieldLen,Fieldtype;
 	int MsgPacketHeaderLen=46;
 	uchar tmpBuff[2048];
+	uchar bcd_buf[2048];
 	char str[2048];
 	char sstr[10];
+	int DataLen;
+	int HeadLen;
+	int offset;
+	unsigned char bcd_value;
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg); 
 	
 	memset(str,0,2048);
@@ -1239,19 +1358,62 @@ int Convert128To64(uchar hexBuff[], int* nMsgLen)
 	}
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "Head   %s",str);
 	memset(str,0,2048);
-
-	for(i=0; i<=64; i++)
+    offset=0;
+	for(i=0; i<=128; i++)
 	{
 		FieldLen =2048;
-		if(GetField(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
+		if(GetField128(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
 		{
 			if(FieldLen==0)
 				sprintf(str,"F%0.2d     ",i);
 			else
 			{
-				sprintf(str,"F%0.2d     ",i);
-				for(j=0; j<FieldLen; j++)
-					sprintf(str+strlen(str),"%0.2X ",tmpBuff[j]);
+                if(s_new_isodef[i].fmt == 0)
+                {
+                	HeadLen=0;                    
+                }
+                else if (s_new_isodef[i].fmt == 2)
+                {
+                    HeadLen=1;
+                }
+                else if (s_new_isodef[i].fmt == 3)
+                {
+                    HeadLen=2;
+                }
+                DataLen=FieldLen;
+                if(HeadLen == 0 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_BCD)
+                {
+                	asc_to_bcd(bcd_buf+offset,tmpBuff,DataLen);
+                	DataLen=(DataLen+1)/2;
+                }
+                else if(HeadLen == 0 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_ASC)
+                {
+                    memcpy(bcd_buf+offset, tmpBuff,DataLen);                    
+                }
+                else if(HeadLen == 1 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_BCD)
+                {  
+                    bcd_value=(DataLen/10)<<4;
+                    bcd_value=bcd_value | (DataLen%10);
+                    memcpy(bcd_buf+offset, &bcd_value, 1);
+                	asc_to_bcd(bcd_buf+offset+1, tmpBuff, DataLen);
+                	DataLen=(DataLen+1)/2;
+                }
+                else if(HeadLen == 1 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_ASC)
+                {
+                    bcd_value=(DataLen/10)<<4;
+                    bcd_value=bcd_value | (DataLen%10);
+                    memcpy(bcd_buf+offset, &bcd_value, 1);                	
+                	memcpy(bcd_buf+offset+1,tmpBuff,DataLen);
+                	
+                }
+                else if(HeadLen == 2 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_BCD)
+                {
+                	
+                }
+                else if(HeadLen == 2 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_ASC)
+                {
+                	
+                }                	
 			}
 			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
 
