@@ -1329,6 +1329,8 @@ int Convert128To64(uchar hexBuff[], int* nMsgLen)
 	uchar bcd_buf[2048];
 	char str[2048];
 	char sstr[10];
+	uchar sField63[1024];
+	int  nField63Len;
 	int DataLen;
 	int HeadLen;
 	int offset;
@@ -1395,7 +1397,7 @@ int Convert128To64(uchar hexBuff[], int* nMsgLen)
                     bcd_value=(DataLen/10)<<4;
                     bcd_value=bcd_value | (DataLen%10);
                     memcpy(bcd_buf+offset, &bcd_value, 1);
-                	asc_to_bcd(bcd_buf+offset+1, tmpBuff, DataLen);
+                	asc_to_bcd(bcd_buf+offset+1, tmpBuff, DataLen,0);
                 	DataLen=(DataLen+1)/2;
                 }
                 else if(HeadLen == 1 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_ASC)
@@ -1408,14 +1410,53 @@ int Convert128To64(uchar hexBuff[], int* nMsgLen)
                 }
                 else if(HeadLen == 2 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_BCD)
                 {
-                	
+                	sprintf(sstr, "%03d", DataLen);
+                	asc_to_bcd(bcd_buf+offset, sstr,3,1); // length 0x31 0x34 0x35 convert to  0x01 0x45
+                	asc_to_bcd(bcd_buf+offset+2,tmpBuff, DataLen, 0);
+                	DataLen=(DataLen+1)/2;
                 }
                 else if(HeadLen == 2 && s_new_isodef[i].typ == TYP_ASC && s_isodef[i] == TYP_ASC)
                 {
-                	
-                }                	
+                	sprintf(sstr, "%03d", DataLen);
+                	asc_to_bcd(bcd_buf+offset,sstr, 3, 1);
+                	memcpy(bcd_buf+offset+2, tmpBuff, DataLen);
+                }
+                else
+                {
+                	memcpy(bcd_buf+offset, tmpBuff, DataLen+HeadLen);
+                }
+                if(i == 90 )
+                {
+                    memcpy(sField63+2,"\x7F\x90",2);
+                    memcpy(sField63+2+2, tmpBuff,42);
+                    nField63Len=44;
+                    memcpy(sField63, "\x00\x44",2);
+                }
+                if(i == 122 )
+                {
+                	if(nField63Len == 44)
+                	{
+                		sprintf(sstr, "%03d", DataLen);
+                		memcpy(sField63+46, "\x7F\x122", 2);
+                		memcpy(sField63+46+2, sstr, 3);
+                		memcpy(sField63+49+2, tmpBuff,DataLen);
+                		nField63Len=nField63Len+2+3+DataLen;
+                		sprintf(sstr, "%03d", nField63Len);
+                		asc_to_bcd(sField63, sstr, 3, 1);
+                	}
+                	else
+                	{
+                		sprintf(sstr, "%03d", DataLen);
+                		asc_to_bcd(sField63, sstr, 3, 1);
+                		memcpy(sField63+2, tmpBuff, DataLen);
+                	}
+
+                }
+                offset=HeadLen+DataLen;
+
 			}
-			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
+			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",bcd_buf);
+
 
 		}
 	}	
