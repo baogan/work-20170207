@@ -36,6 +36,8 @@ int     gnTcpMsgLenL;
 
 T_SrvMsq           gatSrvMsq[SRV_MSQ_NUM_MAX];
 Tbl_srv_inf_Def    tTblSrvInf;
+struct  sockaddr_in local_addr;
+int     Local_len= sizeof( local_addr);
 
 int nCConnectSocket(unsigned short Port, char *Ip_addr);
 
@@ -659,7 +661,7 @@ int HandleRequestMessage(char *psMsgBuf, int nMsgLen)
             sigset(SIGALRM, Rdmsg_to);
            // alarm(COMI_MSG_READTO);
 
-
+           /****
             nMsgRecvLen = ReadSocket(socket_id, sMsgRevBuf+SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN, MES_BUF_SIZE,"1702Recvpacket");
             if (nMsgRecvLen <= 0)
             {
@@ -676,6 +678,7 @@ int HandleRequestMessage(char *psMsgBuf, int nMsgLen)
             //HtDebugString(gsLogFile, HT_LOG_MODE_DEBUG, __FILE__, __LINE__, tmpBuf, nMsgRecvLen-7);
 
             memcpy(sMsgRevBuf+SRV_ID_LEN*2+FLD_MSQ_TYPE_LEN+7,tmpBuf,nMsgRecvLen-7);
+            ****/
             // modify by hxb 2015111
     }
 	else if(memcmp(psMsgBuf+SRV_ID_LEN, "1801", SRV_ID_LEN) == 0)
@@ -1286,4 +1289,50 @@ int Create_socket( unsigned Port)
 
   return(socket_id);
 }
+int Setsokopt(int sdNew)
+{
+    struct linger soLinger;
+    int soKeepAlive,soReuseAddr;
 
+       /*************************************************/
+    /* Set socket options for new socket              */
+    /*************************************************/
+    soLinger.l_onoff = 1;
+    soLinger.l_linger = 0;
+    if( -1 == setsockopt(sdNew,
+                     SOL_SOCKET,
+                     SO_LINGER,
+                     (char*)&soLinger,
+                     sizeof(soLinger)))
+    {
+        HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__,
+             "set linger option failed!");
+        return -1;
+    }
+
+    soKeepAlive = 0;
+#if 1
+    if( -1 == setsockopt(sdNew,
+                     SOL_SOCKET,
+                     SO_KEEPALIVE,
+                     &soKeepAlive,
+                     (int)sizeof(soKeepAlive)))
+    {
+        HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__,
+            "set keepalive option failed!");
+        return -1;
+    }
+#endif
+    soReuseAddr = 1;
+    if( -1 == setsockopt(sdNew,
+                     SOL_SOCKET,
+                     SO_REUSEADDR,
+                     &soReuseAddr,
+                     (int)sizeof(soReuseAddr)))
+    {
+        HtLog (gsLogFile, HT_LOG_MODE_ERROR, __FILE__,__LINE__,
+            "set reuse addr option failed!");
+        return -1;
+    }
+    return 0;
+}

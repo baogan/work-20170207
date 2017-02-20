@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "BF8583.h"
+#include "GH8583.h"
 #include "HtLog.h"
 
 #define  MAX_BUF_SIZE 1024
@@ -74,7 +74,7 @@ ISO_DEF s_isodef[65] = {
     /*054*/ {TYP_ASC, 3, 20}, // "Amounts, additional"
     /*055*/ {TYP_ASC, 3, 255}, // "IC card system related data"
     /*056*/ {TYP_BCD, 0, 6}, // "Original data elements"
-    /*057*/ {TYP_ASC, 3, 100}, // "Authorization life cycle code"
+    /*057*/ {TYP_BCD, 0, 3}, // "Authorization life cycle code"
     /*058*/ {TYP_ASC, 3, 100}, // "Authorizing agent institution Id Code"
     /*059*/ {TYP_ASC, 2, 999}, // "Transport data"
     /*060*/ {TYP_BCD, 3, 19}, // "Reserved for national use"
@@ -85,6 +85,7 @@ ISO_DEF s_isodef[65] = {
 
  
 };
+
 ISO_DEF s_new_isodef[129] = {
 
 
@@ -219,9 +220,9 @@ ISO_DEF s_new_isodef[129] = {
     /*128*/ {TYP_ASC, 0, 8}    // mac 
 
 };
-#define MY_BITGET(p,n) ((p)[(n-1)/8]&(0x80>>((n-1)%8)))       //å–bitä½?
-#define MY_BITSET(p,n) ((p)[(n-1)/8]|=(0x80>>((n-1)%8)))      //è®¾bitä½?
-#define MY_BITCLR(p,n) ((p)[(n-1)/8]&=(~(0x80>>((n-1)%8))))   //æ¸…bitä½?
+#define MY_BITGET(p,n) ((p)[(n-1)/8]&(0x80>>((n-1)%8)))       //Ã¥Ââ€“bitÃ¤Â½?
+#define MY_BITSET(p,n) ((p)[(n-1)/8]|=(0x80>>((n-1)%8)))      //Ã¨Â®Â¾bitÃ¤Â½?
+#define MY_BITCLR(p,n) ((p)[(n-1)/8]&=(~(0x80>>((n-1)%8))))   //Ã¦Â¸â€¦bitÃ¤Â½?
 unsigned char GBuff[MAX_PACKET_LEN];
 uchar MsgType[2];
 uchar GBitMap[8];
@@ -477,14 +478,14 @@ int   GetField128(int FieldNum,uchar *Buff,int *DataLen,int *typ)
 		return 0;
 	}
 	if(!MY_BITGET(GBitMap128,FieldNum))
-		return -3;//æ— æ­¤åŸ?
+		return -3;//Ã¦â€”Â Ã¦Â­Â¤Ã¥Å?
 	len=GetFieldLen128(s_new_isodef[FieldNum],&HeadLen,(uchar*)GBuff128+offset);
 	if(len<0)
 	{
 		return -1;
 	}
 	if(len>*DataLen)
-		return -4;//ç”¨æˆ·åŒºæº¢å‡?
+		return -4;//Ã§â€Â¨Ã¦Ë†Â·Ã¥Å’ÂºÃ¦ÂºÂ¢Ã¥â€?
 	memcpy(Buff,GBuff128+offset+HeadLen,len);
 	*DataLen=len;
 	*typ=s_new_isodef[FieldNum].typ;
@@ -700,7 +701,7 @@ int  DelField128(int FieldNum)
 			return -2;
 		}
 	}
-	if(MY_BITGET(GBitMap128,FieldNum))//åˆ é™¤åŽŸæ¥çš„é‚£ä¸ªåŸŸ
+	if(MY_BITGET(GBitMap128,FieldNum))//Ã¥Ë†Â Ã©â„¢Â¤Ã¥Å½Å¸Ã¦ÂÂ¥Ã§Å¡â€žÃ©â€šÂ£Ã¤Â¸ÂªÃ¥Å¸Å?
 	{
 		len2=GetFieldLen(s_new_isodef[FieldNum],&HeadLen,(uchar*)GBuff128+offset);
 		GPacketLen128-=(len2+HeadLen);
@@ -713,7 +714,7 @@ int  DelField128(int FieldNum)
 	return 0;
 }
 
-void DelFld(uchar *hexBuff, int BuffLen, int *SendLen)
+void DelFld128_90(uchar *hexBuff, int BuffLen, int *SendLen)
 {
 	
 	int Ret,i,j;
@@ -725,7 +726,7 @@ void DelFld(uchar *hexBuff, int BuffLen, int *SendLen)
 
 	memset(str,0,2048);
 
-	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	Ret=SetPacket(&hexBuff[MagPacketHeaderLen128],BuffLen-MagPacketHeaderLen128);
 	if(Ret!=0)
 	{
 		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "packet err\n");
@@ -733,10 +734,9 @@ void DelFld(uchar *hexBuff, int BuffLen, int *SendLen)
 	}
 
 
-	DelField(31);
-	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
-	*SendLen=*SendLen+MagPacketHeaderLen;
-
+	DelField128(90);
+	*SendLen=GetPacket128(&hexBuff[MagPacketHeaderLen128],4096);
+	*SendLen=*SendLen+MagPacketHeaderLen128;
 
 }
 void Print8583Packet(uchar *msg, uchar *hexBuff, int BuffLen)
@@ -767,6 +767,46 @@ void Print8583Packet(uchar *msg, uchar *hexBuff, int BuffLen)
 		s_isodef[62].typ=TYP_BCD;
 		s_isodef[61].typ=TYP_ASC;
 	}
+	else if (strcmp(msg, "1702sendpacket") ==0 || strcmp(msg, "1702Recvpacket") == 0)
+	{
+		s_isodef[61].typ = TYP_ASC;
+		s_isodef[35].typ = TYP_ASC;
+		s_isodef[36].typ = TYP_ASC;
+		//s_isodef[61].fmt = 2;
+	    s_isodef[54].typ= TYP_ASC;
+		//s_isodef[54].fmt= 2;
+	    s_isodef[49].typ = TYP_ASC;
+	    s_isodef[49].len = 2;
+		
+		s_isodef[54].len = 40;
+		//s_isodef[62].fmt=2;
+		
+	}
+    else if(strcmp(msg,"1709sendpacket")==0 ||strcmp(msg,"1709Recvpacket")==0)
+	{
+		s_isodef[21].typ=TYP_ASC;
+	    s_isodef[21].fmt=2;
+        s_isodef[21].len=256;
+	}
+	else if(strcmp(msg,"1710sendpacket")==0 ||strcmp(msg,"1710Recvpacket")==0)
+	{
+		s_isodef[35].typ=TYP_ASC;
+		s_isodef[36].typ=TYP_ASC;
+	}
+	else if(strcmp(msg,"1711sendpacket")==0 ||strcmp(msg,"1711Recvpacket")==0)
+	{
+		s_isodef[31].typ=TYP_ASC;
+		s_isodef[31].fmt=0;
+		s_isodef[31].len=6;
+	}
+	else if(strcmp(msg,"1715sendpacket")==0 ||strcmp(msg,"1715Recvpacket")==0)
+	{
+		s_isodef[59].fmt=3;
+	}
+	else if (strcmp(msg,"1718sendpacket")==0 ||strcmp(msg, "1718Recvpacket")==0)
+	{
+		MagPacketHeaderLen=46+2;
+	}
 	else
 	{
 		s_isodef[35].typ=TYP_BCD;
@@ -783,7 +823,10 @@ void Print8583Packet(uchar *msg, uchar *hexBuff, int BuffLen)
 		strcpy(str+strlen(str),sstr);
 	}
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
-	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	if(strcmp(msg, "1702sendpacket") == 0 || strcmp(msg, "1702Recvpacket") == 0)
+		Ret=SetPacket(&hexBuff[MagPacketHeaderLen-4],BuffLen-MagPacketHeaderLen-4);
+	else
+	    Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
 	if(Ret!=0)
 	{
 		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",msg);
@@ -792,10 +835,21 @@ void Print8583Packet(uchar *msg, uchar *hexBuff, int BuffLen)
 	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
 
 	memset(str,0,2048);
+	if(strcmp(msg, "1702sendpacket") == 0 || strcmp(msg, "1702Recvpacket") == 0)
+	{
+		for(i=0; i<MagPacketHeaderLen-4; i++)
+		{
+			sprintf(sstr,"%0.2X ",hexBuff[i]);
+			strcpy(str+strlen(str),sstr);
+		}
+	}
+	else
+	{
 	for(i=0; i<MagPacketHeaderLen; i++)
 	{
 		sprintf(sstr,"%0.2X ",hexBuff[i]);
 		strcpy(str+strlen(str),sstr);
+	}
 	}
 	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "Head   %s",str);
 	memset(str,0,2048);
@@ -818,256 +872,8 @@ void Print8583Packet(uchar *msg, uchar *hexBuff, int BuffLen)
 		}
 	}
 }
-void Print8583Packet128(uchar *msg, uchar *hexBuff, int BuffLen)
-{
-	int Ret,i,j;
-	int FieldLen,Fieldtype;
-	uchar tmpBuff[2048];
-	char str[2048];
-	char sstr[10];
-	int MsgPacketHeaderLen=46;
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",msg);	
-	memset(str,0,2048);
-	for(i=0;i<BuffLen;i++)
-	{
-		sprintf(sstr,"%0.2X",hexBuff[i]);
-		strcpy(str+strlen(str),sstr);
-	}
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
-	Ret=SetPacket128(&hexBuff[MsgPacketHeaderLen],BuffLen-MsgPacketHeaderLen);
-	if(Ret!=0)
-	{
-		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",msg);
-		return; 	
-	}
-	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
 
-	memset(str,0,2048);
-	for(i=0; i<MsgPacketHeaderLen; i++)
-	{
-		sprintf(sstr,"%0.2X ",hexBuff[i]);
-		strcpy(str+strlen(str),sstr);
-	}
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "Head   %s",str);
-	memset(str,0,2048);
 
-	for(i=0; i<=128; i++)
-	{
-		FieldLen =2048;
-		if(GetField128(i,tmpBuff,&FieldLen,&Fieldtype)>=0)
-		{
-			if(FieldLen==0)
-				sprintf(str,"F%0.2d     ",i);
-			else
-			{
-				sprintf(str,"F%0.2d     ",i);
-				for(j=0; j<FieldLen; j++)
-					sprintf(str+strlen(str),"%0.2X ",tmpBuff[j]);
-			}
-			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
-
-		}
-	}
-}
-int MakeRetrunPacket(uchar *msg, uchar *RecvBuff, int RecvBuffLen,uchar *SendBuff,int *SendBuffLen)
-{
-	int Ret,i,j;
-	int FieldLen,Fieldtype;
-	char str[2048];
-	char sstr[10];
-	uchar field[65][1000];
-	int fieldlen[65];
-	
-	char    sCurrentTime[15];
-	int seq;
-	
-	memset(field,0,65*1000);
-	memset(fieldlen,0,65);
-	Ret=SetPacket(&RecvBuff[MagPacketHeaderLen],RecvBuffLen-MagPacketHeaderLen);
-	if(Ret!=0)
-	{
-		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",msg);
-		return; 	
-	}
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "\n%s\nHead    ",msg);
-	memset(str,0,2048);
-	for(i=0; i<MagPacketHeaderLen; i++)
-	{
-		sprintf(sstr,"%0.2X ",RecvBuff[i]);
-		strcpy(str+strlen(str),sstr);
-	}
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
-	memset(str,0,2048);
-
-	for(i=0; i<=64; i++)
-	{
-		FieldLen =2048;
-		if(GetField(i,field[i],&FieldLen,&Fieldtype)>=0)
-		{
-			fieldlen[i]=FieldLen;
-			if(fieldlen[i]==0)
-				sprintf(str,"F%0.2d  ",i);
-			else
-			{
-				sprintf(str,"F%0.2d  %0.4d   ",i,fieldlen[i]);
-				for(j=0; j<fieldlen[i]; j++)
-					sprintf(str+strlen(str),"%0.2X ",field[i][j]);
-			}
-			HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",str);
-
-		}
-	}
-	memcpy(SendBuff,"\x60\x00\x00\x00\x14\x60\x31\x00\x31\x30\x01",11);
-	CommonGetCurrentTime (sCurrentTime);
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s",sCurrentTime);
-	asc2hex(sCurrentTime+8,field[12],3);
-	asc2hex(sCurrentTime+4,field[13],2);
-	//memcpy(field[12],"\x15\x58\x32",3);
-	//memcpy(field[13],"\x01\x24",2);
-	memcpy(field[32],"\x12\x34\x56\x54\x32\x10",6);
-	seq = bcd2int(field[11],3);
-	sprintf(field[37],"%0.12d",seq);
-	memcpy(field[39],"00",2);
-	
-	if(memcmp(field[0],"\x08\x00",2)==0 && memcmp(field[60],"\x00",1)==0 && memcmp(field[60]+4,"\x00\x30",2)==0)
-	{
-		//Ç©µ½
-		SetPacket((uchar *)"\x08\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
-		SetField(11,field[11],6);
-		SetField(12,field[12],6);
-		SetField(13,field[13],4);
-		SetField(32,field[32],11);
-		SetField(37,field[37],12);
-		SetField(39,field[39],2);
-		SetField(41,field[41],8);
-		SetField(42,field[42],15);
-		SetField(60,"\x00\x00\x00\x01\x00\x30",11);
-		SetField(62,"\x0B\xA9\x2D\x4B\x18\xBA\x96\xC2\xD2\x5F\x01\x95\xE1\xD4\xDB\x93\xD7\x14\xC8\x4D\xB9\xF1\x7E\x99\x28\x1D\x73\x50\x00\x00\x00\x00\x00\x00\x00\x00\x8C\x65\x0B\xFD",40);
-	}
-	else if(memcmp(field[0],"\x02\x00",2)==0 && memcmp(field[3],"\x31",1)==0)
-	{
-		//Óà¶î
-		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
-		SetField(3,field[3],6);
-
-		SetField(11,field[11],6);
-		SetField(12,field[12],6);
-		SetField(13,field[13],4);
-		SetField(32,field[32],11);
-		SetField(37,field[37],12);
-		SetField(39,field[39],2);
-		SetField(41,field[41],8);
-		SetField(42,field[42],15);
-		SetField(44,"\x31\x32\x33\x34\x35\x36\x35\x34\x33\x32\x31",11);
-		SetField(54,"\x31\x30\x30\x32\x31\x35\x36\x43\x31\x30\x30\x30\x30\x30\x31\x30\x30\x30\x30\x31",20);
-		SetField(60,"\x00\x00\x00\x00\x00\x00",11);
-		SetField(64,"\x00\x00\x00\x00\x00\x00\x00\x00",8);
-	}
-	else if(memcmp(field[0],"\x02\x00",2)==0 && memcmp(field[3],"\x00",1)==0 && memcmp(field[25],"\x00",1)==0)
-	{
-		//Ïû·Ñ
-		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
-		if(fieldlen[2]==8)
-			SetField(2,field[2],16);
-		else if(fieldlen[2]==9)
-			SetField(2,field[2],18);
-		else if(fieldlen[2]==10)
-			SetField(2,field[2],19);
-		else 
-			SetField(2,field[35],16);
-		SetField(3,field[3],6);
-		SetField(4,field[4],12);
-		SetField(11,field[11],6);
-		SetField(12,field[12],6);
-		SetField(13,field[13],4);
-		SetField(15,field[13],4);
-		SetField(25,field[25],2);
-		SetField(32,field[32],11);
-		SetField(37,field[37],12);
-		SetField(39,field[39],2);
-		SetField(41,field[41],8);
-		SetField(42,field[42],15);
-		SetField(44,"\x30\x31\x30\x35\x30\x30\x30\x31\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20",22);
-		SetField(49,"\x31\x35\x36",3);
-		SetField(53,"\x26\x00\x00\x00\x00\x00\x00\x00",16);
-		SetField(60,"\x22\x00\x00\x01\x00\x00",11);
-		SetField(63,"\x43\x55\x50",3);
-		SetField(64,"\x00\x00\x00\x00\x00\x00\x00\x00",8);
-	}
-	else if(memcmp(field[0],"\x02\x00",2)==0 && memcmp(field[3],"\x20",1)==0 && memcmp(field[25],"\x00",1)==0)
-	{
-		//Ïû·Ñ³·Ïû
-		SetPacket((uchar *)"\x02\x10\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
-		if(fieldlen[2]==8)
-			SetField(2,field[2],16);
-		else if(fieldlen[2]==9)
-			SetField(2,field[2],18);
-		else if(fieldlen[2]==10)
-			SetField(2,field[2],19);
-		else 
-			SetField(2,field[35],16);
-		SetField(3,field[3],6);
-		SetField(4,field[4],12);
-		SetField(11,field[11],6);
-		SetField(12,field[12],6);
-		SetField(13,field[13],4);
-		SetField(15,field[13],4);
-		SetField(25,field[25],2);
-		SetField(32,field[13],4);
-		SetField(37,field[37],12);
-		SetField(38,"\x31\x32\x33\x34\x35\x36",6);
-		SetField(39,field[39],2);
-		SetField(41,field[41],8);
-		SetField(42,field[42],15);
-		SetField(44,"\x30\x31\x30\x35\x30\x30\x30\x31\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20",22);
-		SetField(49,"\x31\x35\x36",3);
-		SetField(53,"\x26\x00\x00\x00\x00\x00\x00\x00",16);
-		SetField(60,"\x23\x00\x00\x01\x00\x00",11);
-		SetField(63,"\x43\x55\x50",3);
-		SetField(64,"\x00\x00\x00\x00\x00\x00\x00\x00",8);
-	}
-	else if(memcmp(field[0],"\x02\x20",2)==0 && memcmp(field[3],"\x20",1)==0)
-	{
-		//Ïû·Ñ³·Ïû
-		SetPacket((uchar *)"\x02\x30\x00\x00\x00\x00\x00\x00\x00\x00",10);//1¡¢2Óò
-		if(fieldlen[2]==8)
-			SetField(2,field[2],16);
-		else if(fieldlen[2]==9)
-			SetField(2,field[2],18);
-		else if(fieldlen[2]==10)
-			SetField(2,field[2],19);
-		else 
-			SetField(2,field[35],16);
-		SetField(3,field[3],6);
-		SetField(4,field[4],12);
-		SetField(11,field[11],6);
-		SetField(12,field[12],6);
-		SetField(13,field[13],4);
-		SetField(15,field[13],4);
-		SetField(25,field[25],2);
-		SetField(32,field[13],4);
-		SetField(37,field[37],12);
-		SetField(38,"\x31\x32\x33\x34\x35\x36",6);
-		SetField(39,field[39],2);
-		SetField(41,field[41],8);
-		SetField(42,field[42],15);
-		SetField(44,"\x30\x31\x30\x35\x30\x30\x30\x31\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20\x20",22);
-		SetField(49,"\x31\x35\x36",3);
-		SetField(53,"\x26\x00\x00\x00\x00\x00\x00\x00",16);
-		SetField(60,"\x25\x00\x00\x01\x00\x00",11);
-		SetField(63,"\x43\x55\x50",3);
-		SetField(64,"\x00\x00\x00\x00\x00\x00\x00\x00",8);
-	}
-	else
-		return -1;
-	*SendBuffLen=GetPacket(&SendBuff[11],1024);
-	*SendBuffLen=*SendBuffLen+11;
-
-	//SendBuff[0] = (*SendBuffLen)/256;
-	//SendBuff[1] = (*SendBuffLen)%256;
-	Print8583Packet("SendPacket",SendBuff-2,*SendBuffLen+2);
-	return 0;
-}
 
 void AddFld56(uchar *hexBuff, int BuffLen, int *SendLen)
 {
@@ -1191,15 +997,71 @@ void AddFld57(uchar *hexBuff, int BuffLen, int *SendLen)
 	
 }
 
-void DelFld62(uchar *hexBuff, int BuffLen, int *SendLen)
+void AddFld21(uchar *hexBuff, int BuffLen, int *SendLen)
+{
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	//uchar tmpBuff[2048];
+	char str[100];
+	//char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Add FLD 21\n"); 
+	s_isodef[21].typ=TYP_ASC;
+	s_isodef[21].fmt=2;
+    s_isodef[21].len=256;
+
+	memset(str,0,100);
+	/*for(i=0;i<BuffLen;i++)
+	{
+		sprintf(sstr,"%0.2X",hexBuff[i]);
+		strcpy(str+strlen(str),sstr);
+	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",str);*/
+	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "packet err\n");
+		return; 	
+	}
+	//HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
+
+	
+//	FieldLen =2048;
+//	GetField(60,tmpBuff,&FieldLen,&Fieldtype);
+//	asc2hex(tmpBuff+2,sstr,3);
+    memset(str, 0, sizeof(str));
+	memcpy(str,"1700518001505150134320000508d0000d679000001CC0000000020898602B0131450145978",75);
+	SetField(21,str,75);
+
+
+	
+
+	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
+	
+	*SendLen=*SendLen+MagPacketHeaderLen;
+
+
+	
+	
+	
+}
+
+void DelFld21(uchar *hexBuff, int BuffLen, int *SendLen)
 {
 	
-	int Ret;
-
-
-	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Del FLD 62\n"); 
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	uchar tmpBuff[2048];
+	char str[2048];
+	char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Del FLD 21\n"); 
 	
+	{
+		s_isodef[21].typ=TYP_ASC;
+	    s_isodef[21].fmt=2;
+        s_isodef[21].len=256;
+	}
 
+	memset(str,0,2048);
 
 	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
 	if(Ret!=0)
@@ -1209,14 +1071,133 @@ void DelFld62(uchar *hexBuff, int BuffLen, int *SendLen)
 	}
 
 
-	DelField(62);
+	DelField(21);
 	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
-	
 	*SendLen=*SendLen+MagPacketHeaderLen;
 
 
 }
-// add at convert 64 bitmap message to 128 bitmap message
+
+void AddFld31(uchar *hexBuff, int BuffLen, int *SendLen)
+{
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	//uchar tmpBuff[2048];
+	char str[100];
+	//char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Add FLD 31\n"); 
+	{
+		s_isodef[31].typ=TYP_ASC;
+		s_isodef[31].fmt=0;
+		s_isodef[31].len=6;
+	}
+
+	memset(str,0,100);
+	/*for(i=0;i<BuffLen;i++)
+	{
+		sprintf(sstr,"%0.2X",hexBuff[i]);
+		strcpy(str+strlen(str),sstr);
+	}
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s\n",str);*/
+	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "packet err\n");
+		return; 	
+	}
+	//HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
+
+	
+//	FieldLen =2048;
+//	GetField(60,tmpBuff,&FieldLen,&Fieldtype);
+//	asc2hex(tmpBuff+2,sstr,3);
+    memset(str, 0, sizeof(str));
+	memcpy(str,"151123",6);
+	SetField(31,str,6);
+	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
+	*SendLen=*SendLen+MagPacketHeaderLen;
+}
+
+void DelFld31(uchar *hexBuff, int BuffLen, int *SendLen)
+{
+	
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	uchar tmpBuff[2048];
+	char str[2048];
+	char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Del FLD 31\n"); 
+
+	memset(str,0,2048);
+
+	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "packet err\n");
+		return; 	
+	}
+
+
+	DelField(31);
+	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
+	*SendLen=*SendLen+MagPacketHeaderLen;
+}
+
+void AddFld59(uchar *hexBuff, int BuffLen, int *SendLen)
+{
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	//uchar tmpBuff[2048];
+	char str[100];
+	//char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Add FLD 59\n"); 
+	
+	{
+		s_isodef[59].fmt=3;
+	}
+	memset(str,0,100);
+	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "packet err\n");
+		return; 	
+	}
+	//HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, BuffLen);
+
+    memset(str, 0, sizeof(str));
+	memcpy(str,"\x56\x53\x58\x58\x31\x34\x31\x30\x32\x30\x30\x30\x20\x20\x20\x20\x20\x20\x20\x20\x32\x30\x31\x35\x31\x32\x31\x36\x31\x37\x34\x38\x30\x32\x20\x20\x20\x20\x20\x20",40);
+	SetField(59,str,40);
+	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
+	*SendLen=*SendLen+MagPacketHeaderLen;
+}
+
+void DelFld59(uchar *hexBuff, int BuffLen, int *SendLen)
+{
+	
+	int Ret,i,j;
+	int FieldLen,Fieldtype;
+	uchar tmpBuff[2048];
+	char str[2048];
+	char sstr[10];
+	HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "RRF Del FLD 59\n"); 
+
+	memset(str,0,2048);
+
+	Ret=SetPacket(&hexBuff[MagPacketHeaderLen],BuffLen-MagPacketHeaderLen);
+	if(Ret!=0)
+	{
+		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "packet err\n");
+		return; 	
+	}
+
+
+	DelField(59);
+	*SendLen=GetPacket(&hexBuff[MagPacketHeaderLen],4096);
+	*SendLen=*SendLen+MagPacketHeaderLen;
+
+
+}
+
 int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen, int* ConvertLen )
 {
 	int Ret,i,j;
@@ -1363,7 +1344,7 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen, int* ConvertLen 
 	memcpy(sendmsg+4, hexBuff, MsgPacketHeaderLen);
 	memcpy(sendmsg+4+MsgPacketHeaderLen, ascii_buf,offset);
 	*ConvertLen = 4+MsgPacketHeaderLen+offset;
-	*ConvertLen = (*ConvertLen)-8-nField63Len-3;  // del 64 field data and 63 field
+	*ConvertLen = *ConvertLen-8-nField63Len-3;  // del 64 field data and 63 field
 	MY_BITCLR(sendmsg+4+MsgPacketHeaderLen+4,63);  // del bitmap 63 bit 1---> 0
 	MY_BITCLR(sendmsg+4+MsgPacketHeaderLen+4,64); // del bitmap  64 bit 1---> 0
 	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, sendmsg, 4+MsgPacketHeaderLen+offset);
@@ -1377,7 +1358,7 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen, int* ConvertLen 
     else
     {
 	memcpy(sendmsg+(*ConvertLen), pch+2, 42);
-	*ConvertLen=*ConvertLen+42;
+	*ConvertLen=(*ConvertLen)+42;
 	MY_BITSET(sendmsg+4+MsgPacketHeaderLen+4, 90); // add 90 field like add 26 field 
     }
 
@@ -1392,14 +1373,14 @@ int Convert64To128(uchar *hexBuff, uchar *sendmsg, int BuffLen, int* ConvertLen 
     sstr[3]=0x00;
     FieldLen=atoi(sstr);
     memcpy(sendmsg+(*ConvertLen), pch+2, FieldLen+3);
-    *ConvertLen=(*ConvertLen)+FieldLen+3;
+    *ConvertLen=*ConvertLen+FieldLen+3;
     MY_BITSET(sendmsg+4+MsgPacketHeaderLen+4, 122);  // add 122 field like add 58 field   	
     }
     // reset bitmap  del 63 64   add 90 122 field
     memcpy(sendmsg+(*ConvertLen), "\x00\x00\x00\x00\x00\x00\x00\x00", 8);
-    *ConvertLen = *ConvertLen + 8;  // add 128 field 
+    *ConvertLen = (*ConvertLen) + 8;  // add 128 field 
     MY_BITSET(sendmsg+4+MsgPacketHeaderLen+4,128);
-    sprintf(sstr, "%04d", *ConvertLen);
+    sprintf(sstr, "%04d", (*ConvertLen));
     memcpy(sendmsg, sstr,4);
     memcpy(sendmsg+4+2, sstr, 4);
     return 0;
@@ -1434,7 +1415,7 @@ int Convert128To64(uchar hexBuff[], uchar sendmsg[], int* nMsgLen)
 		HtLog("packet.log", HT_LOG_MODE_ERROR, __FILE__,__LINE__, "%s packet err\n",hexBuff);
 		return; 	
 	}
-	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, *nMsgLen);
+	HtDebugString("packet.log", HT_LOG_MODE_DEBUG, __FILE__, __LINE__, hexBuff, (*nMsgLen));
 
 	memset(str,0,2048);
 	for(i=0; i<MsgPacketHeaderLen; i++)
